@@ -39,6 +39,20 @@ DallasTemperature sensors(&ds);
 #ifdef SDLOG
     #include <SD.h>
     const unsigned int chipSelect = 4;
+
+    void logSD(boolean toLog){
+      char tosend[21];
+      if(toLog == true)
+        sprintf(tosend,"%lu - %s", (millis()/1000)/60, "on");
+      else
+        sprintf(tosend,"%lu - %s", (millis()/1000)/60, "off");
+
+      File myFile = SD.open("data.log", FILE_WRITE);
+      if (myFile) {
+        myFile.println(tosend);
+        myFile.close();
+      }
+    }
 #endif
 
 void setup()
@@ -162,22 +176,6 @@ void setFrigo(boolean statusFrigo)
         }
     }
 }
-
-#ifdef SDLOG
-void logSD(boolean toLog){
-  char tosend[21];
-  if(toLog == true)
-    sprintf(tosend,"%lu - %s", (millis()/1000)/60, "on");
-  else
-    sprintf(tosend,"%lu - %s", (millis()/1000)/60, "off");
-
-  File myFile = SD.open("data.log", FILE_WRITE);
-  if (myFile) {
-    myFile.println(tosend);
-    myFile.close();
-  }
-}
-#endif
 
 boolean runningFlag = false;
 void loop()
