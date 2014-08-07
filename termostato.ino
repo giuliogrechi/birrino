@@ -1,8 +1,11 @@
+
+//commentare e decommentare se necessario
 // #define DEBUG
 #define TEMP_FIXED 17.0
 // #define lm34 A0
 #define DS18B20 8
 #define STANDALONE
+
 
 #ifndef TEMP_FIXED
 #define potentiometer A1
