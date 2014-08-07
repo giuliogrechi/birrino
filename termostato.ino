@@ -5,6 +5,7 @@
 // #define lm34 A0
 #define DS18B20 8
 #define STANDALONE
+#define SDLOG
 
 
 #ifndef TEMP_FIXED
@@ -35,19 +36,40 @@ DallasTemperature sensors(&ds);
 #define SENSOR_TYPE "LM34"
 #endif
 
+#ifdef SDLOG
+    #include <SD.h>
+    const unsigned int chipSelect = 4;
+#endif
+
 void setup()
 {
     #ifdef DEBUG
         {Serial.begin(57600);}
     #endif
+
     pinMode(pinFrigo, OUTPUT);
     digitalWrite(pinFrigo, LOW);
+
     #ifdef STANDALONE
        {pinMode(ledFrigo, OUTPUT);
         digitalWrite(ledFrigo, LOW);}
     #endif
+
     #ifndef lm34
     analogReference(EXTERNAL);
+    #endif
+
+    #ifdef SDLOG
+      // make sure that the default chip select pin is set to
+      // output, even if you don't use it:
+      pinMode(10, OUTPUT);
+      unsigned int sdreturn = SD.begin(chipSelect);
+      #ifdef DEBUG
+        if (!sdreturn)
+          Serial.println("Card failed, or not present");
+        else
+          Serial.println("card initialized.");
+      #endif
     #endif
 }
 
@@ -141,6 +163,22 @@ void setFrigo(boolean statusFrigo)
     }
 }
 
+#ifdef SDLOG
+void logSD(boolean toLog){
+  char tosend[21];
+  if(toLog == true)
+    sprintf(tosend,"%lu - %s", (millis()/1000)/60, "on");
+  else
+    sprintf(tosend,"%lu - %s", (millis()/1000)/60, "off");
+
+  File myFile = SD.open("data.log", FILE_WRITE);
+  if (myFile) {
+    myFile.println(tosend);
+    myFile.close();
+  }
+}
+#endif
+
 boolean runningFlag = false;
 void loop()
 {
@@ -152,12 +190,18 @@ void loop()
         #ifdef STANDALONE
             {digitalWrite(ledFrigo, HIGH);}
         #endif
+        #ifdef SDLOG
+            {logSD(runningFlag);}
+        #endif
     }
     else if ((tempSet - tempRead) > 1.00 && runningFlag == true)
     {
         runningFlag = false;
         #ifdef STANDALONE
             {digitalWrite(ledFrigo, LOW);}
+        #endif
+        #ifdef SDLOG
+            {logSD(runningFlag);}
         #endif
     }
 
